@@ -17,15 +17,10 @@ CREATE TABLE AppUser(
 CREATE FUNCTION verifyItemOwner(owner INTEGER)
   RETURNS BOOLEAN AS $$
 DECLARE
-  ownerType INTEGER;
+  nUsers INTEGER;
 BEGIN
-  SELECT type INTO ownerType FROM AppUser WHERE uid = owner;
-
-  IF type != 'user' THEN
-    RETURN FALSE;
-  END IF;
-
-  RETURN TRUE;
+  SELECT COUNT(*) INTO nUsers FROM AppUser WHERE uid = owner AND type = 'user';
+  RETURN nUsers = 1;
 END;
 $$ LANGUAGE 'plpgsql';
 -- END FUNCTION
