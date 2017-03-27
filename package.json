@@ -1,0 +1,65 @@
+{
+  "name": "sous-chef",
+  "version": "0.0.1",
+  "description": "Smart refrigerator system.",
+  "main": "index.js",
+  "scripts": {
+    "start": "babel-node --optimize_for_size --max_old_space_size=460 --gc_interval=100 index.js",
+    "watch": "concurrently -k -p '[{name}]' -n 'SERVER,GULP' -c 'bold.cyan,bold.magenta' 'npm start' 'gulp watch'"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/karimsa/sous-chef.git"
+  },
+  "author": "Karim Alibhai",
+  "contributors": [
+    {
+      "name": "Karim Alibhai"
+    },
+    {
+      "name": "Hanif Bin Ariffin"
+    },
+    {
+      "name": "Jordan Denny"
+    },
+    {
+      "name": "Joey Wang"
+    }
+  ],
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/karimsa/sous-chef/issues"
+  },
+  "homepage": "https://github.com/karimsa/sous-chef#readme",
+  "dependencies": {
+    "babel-cli": "^6.24.0",
+    "babel-preset-es2015": "^6.24.0",
+    "babel-preset-es2016": "^6.22.0",
+    "body-parser": "^1.17.1",
+    "cookie-session": "^2.0.0-beta.1",
+    "deep-assign": "^2.0.0",
+    "ejs": "^2.5.6",
+    "express": "^4.15.2",
+    "morgan": "^1.8.1",
+    "pg": "^6.1.5",
+    "pm2": "^2.4.2",
+    "pmx": "^1.0.4",
+    "sql": "^0.74.0"
+  },
+  "devDependencies": {
+    "autoprefixer": "^6.7.7",
+    "babelify": "^7.3.0",
+    "browserify": "^14.1.0",
+    "concurrently": "^3.4.0",
+    "cssnano": "^3.10.0",
+    "gulp": "^3.9.1",
+    "gulp-concat": "^2.6.1",
+    "gulp-imagemin": "^3.1.1",
+    "gulp-postcss": "^6.4.0",
+    "gulp-sourcemaps": "^2.4.1",
+    "gulp-uglify": "^2.1.2",
+    "precss": "^1.4.0",
+    "vinyl-buffer": "^1.0.0",
+    "vinyl-source-stream": "^1.1.0"
+  }
+}

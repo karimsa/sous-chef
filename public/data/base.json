@@ -1,0 +1,19 @@
+{
+  "error": "",
+
+  "styles": [
+    "https://fonts.googleapis.com/css?family=Roboto:400,500,700",
+    "/vendor/tether/dist/css/tether.min.css",
+    "/vendor/bootstrap/dist/css/bootstrap.min.css",
+    "/dist/css/bundle.css"
+  ],
+
+  "scripts": [
+    "/vendor/jquery/dist/jquery.min.js",
+    "/vendor/tether/dist/js/tether.min.js",
+    "/vendor/bootstrap/dist/js/bootstrap.min.js",
+    "/vendor/angular/angular.min.js",
+    "/vendor/angular-route/angular-route.min.js",
+    "/vendor/angular-animate/angular-animate.min.js"
+  ]
+}

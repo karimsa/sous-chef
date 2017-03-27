@@ -1,0 +1,57 @@
+/**
+ * public/css/index.css - sous-chef
+ *
+ * Licensed under Apache-2.0.
+ */
+
+html {
+  font-family: 'Roboto', sans-serif;
+}
+
+html,
+body {
+  overflow-x: hidden;
+}
+
+.full {
+  display: table;
+  position: absolute;
+
+  top: 0;
+  left: 0;
+}
+
+.full > div {
+  display: table-cell;
+  vertical-align: middle;
+}
+
+.navbar {
+  padding: 1rem;
+}
+
+.navbar-nav {
+  width: 100%;
+}
+
+a[data-toggle],
+button {
+  cursor: pointer;
+}
+
+.navbar-light .navbar-nav .active > .nav-link,
+.navbar-light .navbar-nav .nav-link.active,
+.navbar-light .navbar-nav .nav-link.open,
+.navbar-light .navbar-nav .open > .nav-link {
+  color: #fff;
+}
+
+.nav-pills .nav-item.dropdown.show .nav-link,
+.nav-pills .nav-link.dropdown.active {
+  color: rgba(0,0,0,.5);
+  background: none;
+}
+
+.card > img {
+  width: 100%;
+}

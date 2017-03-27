@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en" class="w-100 h-100">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+  <title>Sous Chef</title>
+  <base href="/">
+
+  <% styles.forEach(style => { %>
+    <link rel="stylesheet" href="<%- style %>">
+  <% }) %>
+</head>
+<body class="w-100 h-100">
+  <%- include('views/' + sess.user.type) %>
+
+  <% scripts.forEach(script => { %>
+    <script src="<%- script %>"></script>
+  <% }) %>
+</body>
+</html>
