@@ -16,7 +16,7 @@ app.factory('$NavFactory', NavFactory)
 app.config(['$routeProvider', '$locationProvider', ($router, $location) => {
   $router
     .when('/', {
-      templateUrl: '/views/index.html',
+      templateUrl: '/views/udashboard.html',
       controller: 'DashCtl'
     })
     .when('/browse', {
