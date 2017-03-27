@@ -10,8 +10,29 @@ Smart refrigerator system for CSI2132.
 
 ### Setup
 
-To install dependencies, run `npm install`. You will be prompted
-for setup variables.
+To install dependencies, run `npm install`.
+
+### Config Files
+
+`keys.json`: an array of "top secret" keys (used for signing cookies).
+
+```json
+[
+  "top secret"
+]
+```
+
+`pg.json`: info for connecting to pg server.
+
+```json
+{
+  "user": "",
+  "database": "",
+  "password": "",
+  "host": "web0.site.uottawa.ca",
+  "port": 15432
+}
+```
 
 ## Scripts
 
