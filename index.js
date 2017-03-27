@@ -16,6 +16,7 @@ const app = express()
     , http = require('http').createServer(app)
     , pub = express.static(__dirname + '/public')
     , _data = {
+        info: {},
         base: require('./public/data/base.json'),
         user: require('./public/data/user.json')
       }
@@ -83,13 +84,25 @@ app.post('/', (req, res, next) => {
 })
 
 /**
+ * Various home page redirects.
+ */
+const HOME_ROUTES = [
+  '/',
+  '/browse',
+  '/meals',
+  '/index.html'
+]
+
+app.get(/.*/, (req, res, next) => {
+  if (HOME_ROUTES.indexOf(req.url) !== -1) {
+    res.render('index', data(!req.session.isPopulated ? 'info' : req.session.user.type, req.session))
+  } else next()
+})
+
+/**
  * Staticish.
  */
-app.get(/.*/, (req, res, next) => {
-  if (req.url === '/' || req.url === '/index.html') {
-    res.render('index', data(!req.session.isPopulated ? 'info' : req.session.user.type, req.session))
-  } else pub(req, res, next)
-})
+app.use(pub)
 
 // start up server
 http.listen(process.env.PORT || 8080, () =>
