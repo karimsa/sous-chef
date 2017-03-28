@@ -75,8 +75,40 @@ CREATE TABLE Recipe(
   PRIMARY KEY (id)
 );
 
+-- START FUNCTION
+-- Verify "UNIQUE" constraint on combination
+-- of recipe and item to make a recipe requirement
+CREATE FUNCTION uniqRecipeRequirement(recipe INTEGER, item TEXT)
+  RETURNS BOOLEAN AS $$
+DECLARE
+  rows INTEGER;
+BEGIN
+  SELECT
+    COUNT(*) INTO rows
+  FROM RecipeRequirement
+  WHERE
+    recipe = recipe
+      AND
+    item = item;
+  
+  RETURN rows = 1;
+END;
+$$ LANGUAGE 'plpgsql';
+-- END FUNCTION
+
+CREATE TABLE RecipeRequirement(
+  recipe INTEGER,
+  item TEXT,
+
+  PRIMARY KEY (recipe, item),
+  FOREIGN KEY (recipe) REFERENCES Recipe,
+  FOREIGN KEY (item) REFERENCES Item,
+
+  CHECK (uniqRecipeRequirement(recipe, item))
+);
+
 CREATE TABLE RecipeStep(
-  recipe SERIAL,
+  recipe INTEGER,
   duration NUMERIC(1) NOT NULL CHECK (duration > 0),
   step TEXT NOT NULL,
 
