@@ -1,5 +1,7 @@
 # SousChef
 
+![](public/src/img/preview.png)
+
 Smart refrigerator system for CSI2132.
 
 ## Requirements
