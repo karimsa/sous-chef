@@ -4,13 +4,17 @@
  * Licensed under Apache 2.0.
  */
 
-import path       from 'path'
-import morgan     from 'morgan'
-import express    from 'express'
-import User       from './lib/user'
-import bodyParser from 'body-parser'
-import assign     from 'deep-assign'
-import session    from 'cookie-session'
+import fs               from 'fs'
+import path             from 'path'
+import { User, Item }   from './lib'
+import morgan           from 'morgan'
+import express          from 'express'
+import imagemin         from 'imagemin'
+import multiparty       from 'multiparty'
+import bodyParser       from 'body-parser'
+import assign           from 'deep-assign'
+import session          from 'cookie-session'
+import imageminPngquant from 'imagemin-pngquant'
 
 const app = express()
     , http = require('http').createServer(app)
@@ -53,15 +57,89 @@ app.use(session({
   keys: require('./keys')
 }))
 app.use(bodyParser.urlencoded({
-  extended: false
+  extended: true
 }))
+app.use(bodyParser.json())
 
 /**
  * Handle forms and actions.
  */
+app.post('/edit/:item', async (req, res) => {
+  try {
+    await Item.updateItem(req.session.user.uid, req.params.item, req.body)
+    res.json({})
+  } catch (err) {
+    res.status(500).end(String(err))
+  }
+})
+
+app.post('/edit/:item/photo', (req, res) => {
+  const form = new multiparty.Form()
+
+  form.parse(req, (err, _, files) => {
+    if (err) res.status(500).end(String(err))
+    else fs.readFile(files.photo[0].path, (rerr, rawBuffer) => {
+      if (rerr) res.status(500).end(String(rerr))
+      else imagemin.buffer(rawBuffer, {
+           plugins: [
+             imageminPngquant({ quality: '50-60' })
+           ]
+         })
+           .then(buffer => Item.updatePhoto(req.session.user.uid, req.params.item, buffer.toString('base64')))
+           .then(() => res.json({}))
+           .catch(err => res.status(500).end(String(err)))
+    })
+  })
+})
+
+app.get('/photo/:item', async (req, res) => {
+  let tag = req.headers['if-none-match'] || req.headers['if-match']
+
+  if (tag && tag === await Item.getPhotoTag(req.session.user.uid, req.params.item)) {
+    return res.status(304).end()
+  }
+
+  try {
+    const r = await Item.getPhoto(req.session.user.uid, req.params.item)
+
+    if (r.length === 1 && r[0] && r[0].photo) {
+      let p = Buffer.from(r[0].photo, 'base64')
+
+      res.set('ETag', r[0].etag)
+      res.end(p)
+    } else res.redirect('http://placehold.it/350x150')
+  } catch (err) {
+    console.log(err.stack || err.message || String(err))
+    res.redirect('http://placehold.it/350x150')
+  }
+})
+
+app.get('/pages.json', (req, res) => {
+  if (!req.session.isPopulated) {
+    return res.status(403).end('{"status":"Failed."}')
+  }
+
+  Item.pages(req.session.user.uid)
+    .then(pages => res.json({ status: 'OK', pages }))
+    .catch(err => res.json({ status: 'Error', message: String(err) }))
+})
+
+app.get('/items.json', (req, res) => {
+  if (!req.session.isPopulated) {
+    return res.status(403).end('{"status":"Failed."}')
+  }
+
+  let page = parseInt(req.query.page, 10)
+  if (isNaN(page)) page = 0
+
+  Item.all(req.session.user.uid, page)
+    .then(items => res.json({ status: 'OK', results: items }))
+    .catch(err => res.json({ status: 'Error', message: String(err) }))
+})
+
 app.get('/logout', (req, res) => {
   req.session = null
-  res.redirect('/').end()
+  res.redirect('/')
 })
 
 app.post('/', (req, res, next) => {

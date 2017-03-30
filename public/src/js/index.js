@@ -7,7 +7,7 @@
 import NavFactory from './factories/nav'
 
 import NavCtl from './controllers/nav'
-import DashCtl from './controllers/dash'
+import BrowseCtl from './controllers/browse'
 
 const app = angular.module('SousChef', [ 'ngRoute', 'ngAnimate' ])
 
@@ -16,11 +16,8 @@ app.factory('$NavFactory', NavFactory)
 app.config(['$routeProvider', '$locationProvider', ($router, $location) => {
   $router
     .when('/', {
-      templateUrl: '/views/udashboard.html',
-      controller: 'DashCtl'
-    })
-    .when('/browse', {
-      templateUrl: '/views/browse.html'
+      templateUrl: '/views/browse.html',
+      controller: 'BrowseCtl'
     })
     .when('/meals', {
       templateUrl: '/views/meals.html'
@@ -30,7 +27,11 @@ app.config(['$routeProvider', '$locationProvider', ($router, $location) => {
   $location.html5Mode(true)
 }])
 
+app.filter('mass', ['numberFilter', num => {
+  return str => (num(str, 2) + ' kg')
+}])
+
 app.controller('NavCtl', NavCtl)
-app.controller('DashCtl', DashCtl)
+app.controller('BrowseCtl', BrowseCtl)
 
 angular.element(() => angular.bootstrap(document, ['SousChef']))

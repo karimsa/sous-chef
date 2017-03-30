@@ -26,8 +26,10 @@ $$ LANGUAGE 'plpgsql';
 -- END FUNCTION
 
 CREATE TABLE Item(
-  name TEXT UNIQUE NOT NULL,
-  owner INTEGER UNIQUE NOT NULL CHECK (verifyItemOwner(owner)),
+  name TEXT NOT NULL,
+  owner INTEGER NOT NULL CHECK (verifyItemOwner(owner)),
+  photo TEXT,
+  etag TEXT, -- this is for photo caching reasons
   category TEXT NOT NULL,
   available NUMERIC(2) NOT NULL CHECK (available >= 0),
   threshold NUMERIC(2) NOT NULL CHECK (threshold >= 0),

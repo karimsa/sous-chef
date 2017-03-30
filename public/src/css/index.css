@@ -28,12 +28,14 @@ body {
 
 .navbar {
   padding: 1rem;
+  margin-bottom: 2rem;
 }
 
 .navbar-nav {
   width: 100%;
 }
 
+[ng-click],
 a[data-toggle],
 button {
   cursor: pointer;
@@ -52,6 +54,12 @@ button {
   background: none;
 }
 
-.card > img {
+.card .card-img-top {
   width: 100%;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(0,0,0,.125);
+}
+
+.card .card-img-top:hover {
+  opacity: .5;
 }

@@ -6,8 +6,7 @@
 
 export default () => ({
   nav: {
-    '/': 'Dashboard',
-    '/browse': 'Browse',
+    '/': 'Browse',
     '/meals': 'Meals'
   }
 })
