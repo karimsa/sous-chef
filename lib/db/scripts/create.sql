@@ -71,6 +71,8 @@ EXECUTE PROCEDURE afterItemUpdate();
 CREATE TABLE Recipe(
   id SERIAL,
   name TEXT NOT NULL,
+  photo TEXT,
+  etag TEXT, -- this is for photo caching reasons
   description TEXT,
   category TEXT NOT NULL,
 

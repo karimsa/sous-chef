@@ -6,8 +6,9 @@
 
 import NavFactory from './factories/nav'
 
-import NavCtl from './controllers/nav'
+import NavCtl    from './controllers/nav'
 import BrowseCtl from './controllers/browse'
+import MealsCtl  from './controllers/meals'
 
 const app = angular.module('SousChef', [ 'ngRoute', 'ngAnimate' ])
 
@@ -20,7 +21,8 @@ app.config(['$routeProvider', '$locationProvider', ($router, $location) => {
       controller: 'BrowseCtl'
     })
     .when('/meals', {
-      templateUrl: '/views/meals.html'
+      templateUrl: '/views/meals.html',
+      controller: 'MealsCtl'
     })
     .otherwise('/')
 
@@ -33,5 +35,6 @@ app.filter('mass', ['numberFilter', num => {
 
 app.controller('NavCtl', NavCtl)
 app.controller('BrowseCtl', BrowseCtl)
+app.controller('MealsCtl', MealsCtl)
 
 angular.element(() => angular.bootstrap(document, ['SousChef']))

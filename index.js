@@ -4,17 +4,17 @@
  * Licensed under Apache 2.0.
  */
 
-import fs               from 'fs'
-import path             from 'path'
-import { User, Item }   from './lib'
-import morgan           from 'morgan'
-import express          from 'express'
-import imagemin         from 'imagemin'
-import multiparty       from 'multiparty'
-import bodyParser       from 'body-parser'
-import assign           from 'deep-assign'
-import session          from 'cookie-session'
-import imageminPngquant from 'imagemin-pngquant'
+import fs                     from 'fs'
+import path                   from 'path'
+import { User, Item, Meal }   from './lib'
+import morgan                 from 'morgan'
+import express                from 'express'
+import imagemin               from 'imagemin'
+import multiparty             from 'multiparty'
+import bodyParser             from 'body-parser'
+import assign                 from 'deep-assign'
+import session                from 'cookie-session'
+import imageminPngquant       from 'imagemin-pngquant'
 
 const app = express()
     , http = require('http').createServer(app)
@@ -121,7 +121,7 @@ app.get('/item/pages.json', (req, res) => {
 
   Item.pages(req.session.user.uid)
     .then(pages => res.json({ status: 'OK', pages }))
-    .catch(err => res.json({ status: 'Error', message: String(err) }))
+    .catch(err => res.status(500).end(String(err)))
 })
 
 app.get('/item/all.json', (req, res) => {
@@ -134,7 +134,80 @@ app.get('/item/all.json', (req, res) => {
 
   Item.all(req.session.user.uid, page)
     .then(items => res.json({ status: 'OK', results: items }))
-    .catch(err => res.json({ status: 'Error', message: String(err) }))
+    .catch(err => res.status(500).end(String(err)))
+})
+
+app.post('/meal/edit/:meal', async (req, res) => {
+  try {
+    await Meal.updateMeal(req.params.meal, req.body)
+    res.json({})
+  } catch (err) {
+    res.status(500).end(String(err))
+  }
+})
+
+app.post('/meal/edit/:meal/photo', (req, res) => {
+  const form = new multiparty.Form()
+
+  form.parse(req, (err, _, files) => {
+    if (err) res.status(500).end(String(err))
+    else fs.readFile(files.photo[0].path, (rerr, rawBuffer) => {
+      if (rerr) res.status(500).end(String(rerr))
+      else imagemin.buffer(rawBuffer, {
+           plugins: [
+             imageminPngquant({ quality: '50-60' })
+           ]
+         })
+           .then(buffer => Meal.updatePhoto(req.params.meal, buffer.toString('base64')))
+           .then(() => res.json({}))
+           .catch(err => res.status(500).end(String(err)))
+    })
+  })
+})
+
+app.get('/meal/photo/:meal', async (req, res) => {
+  let tag = req.headers['if-none-match'] || req.headers['if-match']
+
+  if (tag && tag === await Meal.getPhotoTag(req.params.meal)) {
+    return res.status(304).end()
+  }
+
+  try {
+    const r = await Meal.getPhoto(req.params.meal)
+
+    if (r.length === 1 && r[0] && r[0].photo) {
+      let p = Buffer.from(r[0].photo, 'base64')
+
+      res.set('ETag', r[0].etag)
+      res.end(p)
+    } else res.redirect('http://placehold.it/350x150')
+  } catch (err) {
+    console.log(err.stack || err.message || String(err))
+    res.redirect('http://placehold.it/350x150')
+  }
+})
+
+app.get('/meal/pages.json', (req, res) => {
+  if (!req.session.isPopulated) {
+    return res.status(403).end('{"status":"Failed."}')
+  }
+
+  Meal.pages()
+    .then(pages => res.json({ status: 'OK', pages }))
+    .catch(err => res.status(500).end(String(err)))
+})
+
+app.get('/meal/all.json', (req, res) => {
+  if (!req.session.isPopulated) {
+    return res.status(403).end('{"status":"Failed."}')
+  }
+
+  let page = parseInt(req.query.page, 10)
+  if (isNaN(page)) page = 0
+
+  Meal.all(page)
+    .then(meals => res.json({ status: 'OK', results: meals }))
+    .catch(err => res.status(500).end(String(err)))
 })
 
 app.get('/logout', (req, res) => {
