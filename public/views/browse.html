@@ -15,7 +15,7 @@
 <div class="row">
   <div class="col-12 col-md-6 mb-3">
     <div class="card" ng-if="activeItem && activeItem.name">
-      <img class="card-img-top" ng-click="editImage()" ng-src="/photo/{{ activeItem.name }}?lr={{ activeItem.lastRefresh || 0 }}" alt="Preview of the item was here">
+      <img class="card-img-top" ng-click="editImage()" ng-src="/item/photo/{{ activeItem.name }}?lr={{ activeItem.lastRefresh || 0 }}" alt="Preview of the item was here">
       <div class="card-block">
         <h4 class="card-title" style="margin-bottom: 0; " ng-bind="activeItem.name"></h4>
       </div>

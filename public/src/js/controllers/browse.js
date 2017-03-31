@@ -42,7 +42,7 @@ export default ['$scope', '$http', ($scope, $http) => {
     if ($scope.page < $scope.pages.length) $scope.page += 1
   }
 
-  $http.get('/pages.json')
+  $http.get('/item/pages.json')
     .then(res => {
       $scope.pages = [... new Array(res.data.pages).keys()]
     })
@@ -64,7 +64,7 @@ export default ['$scope', '$http', ($scope, $http) => {
 
       $.ajax({
         type: 'POST',
-        url: `/edit/${ item.name }/photo`,
+        url: `/item/edit/${ item.name }/photo`,
         data,
         dataType: 'json',
         processData: false,
@@ -98,7 +98,7 @@ export default ['$scope', '$http', ($scope, $http) => {
 
     $.ajax({
       type: 'POST',
-      url: `/edit/${ activeItemBkp.name }`,
+      url: `/item/edit/${ activeItemBkp.name }`,
       data: item,
       success: () => $('#editItem').modal('hide'),
       error: err => {
@@ -110,7 +110,7 @@ export default ['$scope', '$http', ($scope, $http) => {
 
   $scope.$watch('page', page => {
     if (($scope.itemPages.length - 1) < page) {
-      $http.get('/items.json?page=' + page)
+      $http.get('/item/all.json?page=' + page)
         .then(res => $scope.itemPages.push(res.data.results.map(i => {
           i.threshold = parseFloat(i.threshold)
           i.amountnew = parseFloat(i.amountnew)

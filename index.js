@@ -64,7 +64,7 @@ app.use(bodyParser.json())
 /**
  * Handle forms and actions.
  */
-app.post('/edit/:item', async (req, res) => {
+app.post('/item/edit/:item', async (req, res) => {
   try {
     await Item.updateItem(req.session.user.uid, req.params.item, req.body)
     res.json({})
@@ -73,7 +73,7 @@ app.post('/edit/:item', async (req, res) => {
   }
 })
 
-app.post('/edit/:item/photo', (req, res) => {
+app.post('/item/edit/:item/photo', (req, res) => {
   const form = new multiparty.Form()
 
   form.parse(req, (err, _, files) => {
@@ -92,7 +92,7 @@ app.post('/edit/:item/photo', (req, res) => {
   })
 })
 
-app.get('/photo/:item', async (req, res) => {
+app.get('/item/photo/:item', async (req, res) => {
   let tag = req.headers['if-none-match'] || req.headers['if-match']
 
   if (tag && tag === await Item.getPhotoTag(req.session.user.uid, req.params.item)) {
@@ -114,7 +114,7 @@ app.get('/photo/:item', async (req, res) => {
   }
 })
 
-app.get('/pages.json', (req, res) => {
+app.get('/item/pages.json', (req, res) => {
   if (!req.session.isPopulated) {
     return res.status(403).end('{"status":"Failed."}')
   }
@@ -124,7 +124,7 @@ app.get('/pages.json', (req, res) => {
     .catch(err => res.json({ status: 'Error', message: String(err) }))
 })
 
-app.get('/items.json', (req, res) => {
+app.get('/item/all.json', (req, res) => {
   if (!req.session.isPopulated) {
     return res.status(403).end('{"status":"Failed."}')
   }
