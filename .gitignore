@@ -3,3 +3,4 @@ public/vendor
 *.log
 keys.json
 pg.json
+pg.*

@@ -1,5 +1,5 @@
 {
   "scripts": [
-    "/dist/js/bundle.js"
+    "/dist/js/bundle.user.js"
   ]
 }

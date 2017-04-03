@@ -14,20 +14,52 @@ const gulp = require('gulp')
     , source = require('vinyl-source-stream')
     , sourcemaps = require('gulp-sourcemaps')
 
-gulp.task('js', () =>
+gulp.task('js:user', () =>
   browserify({
-    entries: 'public/src/js/index.js',
+    entries: 'public/src/js/user.js',
     debug: true
   })
       .transform('babelify')
       .bundle()
-      .pipe(source('bundle.js'))
+      .pipe(source('bundle.user.js'))
       .pipe(buffer())
       .pipe(sourcemaps.init())
       .pipe(uglify())
       .pipe(sourcemaps.write('.'))
       .pipe(gulp.dest('./public/dist/js'))
 )
+
+gulp.task('js:admin', () =>
+  browserify({
+    entries: 'public/src/js/admin.js',
+    debug: true
+  })
+      .transform('babelify')
+      .bundle()
+      .pipe(source('bundle.admin.js'))
+      .pipe(buffer())
+      .pipe(sourcemaps.init())
+      .pipe(uglify())
+      .pipe(sourcemaps.write('.'))
+      .pipe(gulp.dest('./public/dist/js'))
+)
+
+gulp.task('js:chef', () =>
+  browserify({
+    entries: 'public/src/js/chef.js',
+    debug: true
+  })
+      .transform('babelify')
+      .bundle()
+      .pipe(source('bundle.chef.js'))
+      .pipe(buffer())
+      .pipe(sourcemaps.init())
+      .pipe(uglify())
+      .pipe(sourcemaps.write('.'))
+      .pipe(gulp.dest('./public/dist/js'))
+)
+
+gulp.task('js', ['js:user', 'js:admin', 'js:chef'])
 
 gulp.task('css', () =>
   gulp.src([ 'public/src/css/**/*.css' ])

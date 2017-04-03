@@ -1,9 +1,5 @@
 <div class="collapse navbar-collapse" id="navbarNav">
-  <ul class="navbar-nav nav nav-pills justify-content-end" ng-controller="NavCtl">
-    <li class="nav-item" ng-repeat="(href,title) in nav">
-      <a class="nav-link" ng-class="{ 'active': current(href) }" href="{{href}}" ng-bind="title"></a>
-    </li>
-
+  <ul class="navbar-nav nav nav-pills justify-content-end">
     <li class="nav-item dropdown ml-auto">
       <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
         <%= sess.user.name %>

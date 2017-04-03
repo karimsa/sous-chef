@@ -15,17 +15,16 @@
     <div class="card" ng-if="activeMeal && activeMeal.name">
       <img class="card-img-top" ng-click="editImage()" ng-src="/meal/photo/{{ activeMeal.name }}?lr={{ activeMeal.lastRefresh || 0 }}" alt="Preview of the meal was here">
       <div class="card-block">
-        <h4 class="card-title" style="margin-bottom: 0; " ng-bind="activeMeal.name"></h4>
+        <h4 class="card-title mb-0" ng-bind="activeMeal.name"></h4>
+        <p class="mt-2 mb-0" ng-bind="activeMeal.description"></p>
       </div>
       <ul class="list-group list-group-flush">
-        <li class="list-group-item"><span class="font-weight-bold">Price</span><span class="ml-auto" ng-bind="activeMeal.price | currency"></span></li>
-        <li class="list-group-item"><span class="font-weight-bold">Category</span><span class="ml-auto" ng-bind="activeMeal.category"></span></li>
-        <li class="list-group-item"><span class="font-weight-bold">Amount available</span><span class="ml-auto" ng-bind="activeMeal.available | mass"></span></li>
-        <li class="list-group-item"><span class="font-weight-bold">Minimum required</span><span class="ml-auto" ng-bind="activeMeal.threshold | mass"></span></li>
-        <li class="list-group-item"><span class="font-weight-bold">New order size</span><span class="ml-auto" ng-bind="activeMeal.amountnew | mass"></span></li>
+        <li class="list-group-item"><span class="font-weight-bold">Number of steps </span><span class="ml-auto" ng-bind="activeMeal.steps"></span></li>
+        <li class="list-group-item"><span class="font-weight-bold">Ready in </span><span class="ml-auto" ng-bind="activeMeal.duration"></span> mins.</li>
       </ul>
-      <div class="card-block">
-        <a href="#" class="card-link float-right" data-toggle="modal" data-target="#editMeal">Edit</a>
+      <div class="card-block text-right">
+        <a href="#" class="btn btn-sm btn-primary" ng-click="viewMeal(activeMeal.name)">View</a>
+        <a href="#" class="btn btn-sm btn-success" data-toggle="modal" data-target="#orderMeal">Order</a>
       </div>
     </div>
   </div>
@@ -58,7 +57,7 @@
             </li>
 
             <li class="page-meal"  ng-class="{ 'disabled': page == pages.length - 1 }">
-              <a href="3" class="page-link" ng-click="nextPage()" aria-label="Next">
+              <a href="#" class="page-link" ng-click="nextPage()" aria-label="Next">
                 <span aria-hidden="true">&raquo;</span>
                 <span class="sr-only">Next</span>
               </a>
@@ -70,11 +69,11 @@
   </div>
 </div>
 
-<div class="modal fade" id="editMeal" tabindex="-1" role="dialog" aria-labelledby="edit-lbl" aria-hidden="true">
+<div class="modal fade" id="viewMeal" tabindex="-1" role="dialog" aria-labelledby="view-lbl" aria-hidden="true">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="edit-lbl">Edit "{{ activeMeal.name }}"</h5>
+        <h5 class="modal-title" id="view-lbl" ng-bind="activeMeal.name"></h5>
         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>
         </button>
@@ -101,24 +100,61 @@
             </div>
           </div>
 
-          <div class="form-group row">
-            <label for="req" class="col-sm-3 col-form-label">Minimum required</label>
-            <div class="col-sm-9">
-              <input type="number" min="0" class="form-control" id="req" name="req" ng-model="activeMeal.threshold" required>
+          <div class="form-group row pt-3">
+            <div class="col-12 text-center">
+              <p>Steps</p>
             </div>
           </div>
 
           <div class="form-group row">
-            <label for="new" class="col-sm-3 col-form-label">New order size</label>
-            <div class="col-sm-9">
-              <input type="number" min="0" class="form-control" id="new" name="new" ng-model="activeMeal.amountnew" required>
+            <div class="col-12">
+              <div ng-repeat="step in activeSteps" class="list-group-item flex-column align-items-start">
+                <div class="d-flex w-100 justify-content-between text-right">
+                  <small>3 days ago</small>
+                </div>
+
+                <p class="mb-1" ng-bind="step.step"></p>
+              </div>
             </div>
           </div>
-        </div>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-success" ng-click="saveMeal()">Save</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
+</div>
+</div>
+
+<div class="modal fade" id="orderMeal" tabindex="-1" role="dialog" aria-labelledby="order-lbl" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="order-lbl" ng-bind="activeMeal.name"></h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="container">
+          <div class="row" ng-if="editError">
+            <div class="col-12 alert alert-danger" role="alert">
+              <strong>Dang: </strong> {{ editError }}
+            </div>
+          </div>
+
+          <div class="form-group row">
+            <label for="servings" class="col-sm-3 col-form-label">Servings</label>
+            <div class="col-sm-9">
+              <input type="number" min="1" step="1" class="form-control" id="servings" name="servings" ng-model="servings" required>
+            </div>
+          </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-success" ng-click="placeOrder()">Order</button>
+      </div>
+    </div>
+  </div>
+</div>
 </div>

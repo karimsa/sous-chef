@@ -6,7 +6,12 @@
 
 import fs                     from 'fs'
 import path                   from 'path'
-import { User, Item, Meal }   from './lib'
+import {
+  User,
+  Item,
+  Meal,
+  Order
+}                             from './lib'
 import morgan                 from 'morgan'
 import express                from 'express'
 import imagemin               from 'imagemin'
@@ -22,7 +27,9 @@ const app = express()
     , _data = {
         info: {},
         base: require('./public/data/base.json'),
-        user: require('./public/data/user.json')
+        user: require('./public/data/user.json'),
+        admin: require('./public/data/admin.json'),
+        chef: require('./public/data/chef.json')
       }
     , unique = (elm, index, self) => {
         return self.lastIndexOf(elm) === index
@@ -40,6 +47,21 @@ const app = express()
         dat.scripts = _data.base.scripts.concat(_data[type].scripts)
 
         return dat
+      }
+    , auth = (type, go) => (req, res, next) => {
+        if (typeof type === 'string') {
+          type = [type]
+        }
+
+        if (req.session.isPopulated && type.indexOf(req.session.user.type) !== -1) {
+          if (typeof go === 'function') {
+            go(req, res)
+              .then(json => res.json(json))
+              .catch(err => res.status(500).end(String(err)))
+          } else next()
+        } else {
+          res.status(403).end('You do not have permissions to do this action.')
+        }
       }
 
 /**
@@ -64,16 +86,12 @@ app.use(bodyParser.json())
 /**
  * Handle forms and actions.
  */
-app.post('/item/edit/:item', async (req, res) => {
-  try {
-    await Item.updateItem(req.session.user.uid, req.params.item, req.body)
-    res.json({})
-  } catch (err) {
-    res.status(500).end(String(err))
-  }
-})
+app.post('/item/edit/:item', auth('user', async (req, res) => {
+  await Item.updateItem(req.session.user.uid, req.params.item, req.body)
+  return {}
+}))
 
-app.post('/item/edit/:item/photo', (req, res) => {
+app.post('/item/edit/:item/photo', auth('user'), (req, res) => {
   const form = new multiparty.Form()
 
   form.parse(req, (err, _, files) => {
@@ -92,7 +110,7 @@ app.post('/item/edit/:item/photo', (req, res) => {
   })
 })
 
-app.get('/item/photo/:item', async (req, res) => {
+app.get('/item/photo/:item', auth('user'), async (req, res) => {
   let tag = req.headers['if-none-match'] || req.headers['if-match']
 
   if (tag && tag === await Item.getPhotoTag(req.session.user.uid, req.params.item)) {
@@ -114,21 +132,13 @@ app.get('/item/photo/:item', async (req, res) => {
   }
 })
 
-app.get('/item/pages.json', (req, res) => {
-  if (!req.session.isPopulated) {
-    return res.status(403).end('{"status":"Failed."}')
-  }
-
+app.get('/item/pages.json', auth('user'), (req, res) => {
   Item.pages(req.session.user.uid)
     .then(pages => res.json({ status: 'OK', pages }))
     .catch(err => res.status(500).end(String(err)))
 })
 
-app.get('/item/all.json', (req, res) => {
-  if (!req.session.isPopulated) {
-    return res.status(403).end('{"status":"Failed."}')
-  }
-
+app.get('/item/all.json', auth('user'), (req, res) => {
   let page = parseInt(req.query.page, 10)
   if (isNaN(page)) page = 0
 
@@ -137,7 +147,7 @@ app.get('/item/all.json', (req, res) => {
     .catch(err => res.status(500).end(String(err)))
 })
 
-app.post('/meal/edit/:meal', async (req, res) => {
+app.post('/meal/edit/:meal', auth('user'), async (req, res) => {
   try {
     await Meal.updateMeal(req.params.meal, req.body)
     res.json({})
@@ -146,7 +156,7 @@ app.post('/meal/edit/:meal', async (req, res) => {
   }
 })
 
-app.post('/meal/edit/:meal/photo', (req, res) => {
+app.post('/meal/edit/:meal/photo', auth('user'), (req, res) => {
   const form = new multiparty.Form()
 
   form.parse(req, (err, _, files) => {
@@ -187,21 +197,13 @@ app.get('/meal/photo/:meal', async (req, res) => {
   }
 })
 
-app.get('/meal/pages.json', (req, res) => {
-  if (!req.session.isPopulated) {
-    return res.status(403).end('{"status":"Failed."}')
-  }
-
+app.get('/meal/pages.json', auth('user'), (req, res) => {
   Meal.pages()
     .then(pages => res.json({ status: 'OK', pages }))
     .catch(err => res.status(500).end(String(err)))
 })
 
-app.get('/meal/all.json', (req, res) => {
-  if (!req.session.isPopulated) {
-    return res.status(403).end('{"status":"Failed."}')
-  }
-
+app.get('/meal/all.json', auth('user'), (req, res) => {
   let page = parseInt(req.query.page, 10)
   if (isNaN(page)) page = 0
 
@@ -209,6 +211,75 @@ app.get('/meal/all.json', (req, res) => {
     .then(meals => res.json({ status: 'OK', results: meals }))
     .catch(err => res.status(500).end(String(err)))
 })
+
+app.get('/meal/steps/:meal', auth(['user', 'chef'], async (req, res) => {
+  return await Meal.getSteps(req.params.meal)
+}))
+
+app.get('/meal/ingredients/:meal', auth(['user', 'chef'], async (req, res) => {
+  return await Meal.getIngredients(req.params.meal)
+}))
+
+app.get('/meal/order/:meal/:servings', auth('user'), async (req, res) => {
+  try {
+    res.json(await Meal.placeOrder(req.session.user.uid, req.params.meal, parseInt(req.params.servings, 10)))
+  } catch (err) {
+    res.status(500).end(String(err))
+  }
+})
+
+app.get('/order/pages.json', auth(['admin', 'chef']), (req, res) => {
+  Order['pages' + req.session.user.type]()
+    .then(pages => res.json({ status: 'OK', pages }))
+    .catch(err => res.status(500).end(String(err)))
+})
+
+app.get('/order/all.json', auth(['admin', 'chef']), (req, res) => {
+  let page = parseInt(req.query.page, 10)
+  if (isNaN(page)) page = 0
+
+  Order['all' + req.session.user.type](page)
+    .then(results => res.json({ status: 'OK', results }))
+    .catch(err => res.status(500).end(String(err)))
+})
+
+app.get('/order/reject/:meal/by/:owner', auth(['admin', 'chef'], async (req, res) => {
+  return await Order.reject(
+    await User.name2id(req.params.owner),
+    req.params.meal
+  )
+}))
+
+app.get('/order/approve/:meal/by/:owner', auth('admin', async (req, res) => {
+  return await Order.approve(
+    await User.name2id(req.params.owner), 
+    req.params.meal
+  )
+}))
+
+app.get('/order/complete/:meal/by/:owner', auth('chef', async (req, res) => {
+  await Order.complete(
+    await User.name2id(req.params.owner), 
+    req.params.meal
+  )
+
+  return {}
+}))
+
+app.get('/item/all-ever', auth('chef', async (req, res) => {
+  return (await Item.getAll()).map(item => item.name)
+}))
+
+app.post('/meal/create', auth('chef', async (req, res) => {
+  let meal = req.body.name
+
+  await Meal.create(meal, req.body.description, req.body.category)
+
+  for (let item of req.body.ingredients) await Meal.createRequirement(meal, item.text, parseFloat(item.quantity))
+  for (let step of req.body.steps) await Meal.createStep(meal, step.step, parseFloat(step.duration))
+
+  return {}
+}))
 
 app.get('/logout', (req, res) => {
   req.session = null

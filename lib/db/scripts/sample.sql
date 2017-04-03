@@ -16,8 +16,19 @@ INSERT INTO Item(name, owner, category, available, threshold, amountNew, price) 
 
 -- the field "id" is first, but is not mentioned in the INSERT
 -- because it is auto incrementing
-INSERT INTO Recipe(name, description, category) VALUES
+INSERT INTO Meal(name, description, category) VALUES
   ('Cheese Burger', 'Classic American burger, but with cheese.', 'Fast Food'),
   ('Chicken Souvlaki', 'Slow roasted chicken with garlic and stuff.', 'Greek'),
   ('Beef Souvlaki', 'BBQ lamb beef with garlic and stuff.', 'Greek'),
   ('Tacos', 'Mexican tacos filled with chicken, cheese, lettuce, and stuff.', 'Mexican');
+
+-- recipe for "Cheese Burger"
+INSERT INTO MealStep(meal, duration, step) VALUES
+  ('Cheese Burger', 15, 'BBQ or fry a beef patty for 15 mins.'),
+  ('Cheese Burger', 5, 'Toast or fry the buns for a few mins.'),
+  ('Cheese Burger', 3, 'Put the buns and burger together. With cheese.');
+
+--
+INSERT INTO MealOrder(owner, meal, servings) VALUES
+  (3, 'Chicken Souvlaki', 2),
+  (3, 'Tacos', 6);

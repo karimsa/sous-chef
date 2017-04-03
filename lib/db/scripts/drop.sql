@@ -1,18 +1,26 @@
 -- Destroys all data.
 
-DROP TRIGGER IF EXISTS afterRecipeDeleteTrigger ON Recipe;
+DROP TRIGGER IF EXISTS afterMealDeleteTrigger ON Meal;
 DROP TRIGGER IF EXISTS afterItemUpdateTrigger ON Item;
 
-DROP TABLE IF EXISTS RecipeRequirement;
-DROP TABLE IF EXISTS RecipeStep;
-DROP TABLE IF EXISTS Recipe;
-DROP TABLE IF EXISTS ItemOrder;
-DROP TABLE IF EXISTS Item;
-DROP TABLE IF EXISTS AppUser;
+DROP VIEW IF EXISTS
+  MealSummary,
+  MealOrderSummary;
 
-DROP FUNCTION IF EXISTS afterRecipeDelete();
+DROP TABLE IF EXISTS
+  MealOrder,
+  MealRequirement,
+  MealStep,
+  Meal,
+  ItemOrder,
+  Item,
+  AppUser;
+
+DROP FUNCTION IF EXISTS afterMealDelete();
 DROP FUNCTION IF EXISTS afterItemUpdate();
 DROP FUNCTION IF EXISTS verifyItemOwner(INTEGER);
-DROP FUNCTION IF EXISTS uniqRecipeRequirement(INTEGER, TEXT);
+DROP FUNCTION IF EXISTS uniqMealRequirement(TEXT, TEXT);
 
-DROP TYPE IF EXISTS UserType;
+DROP TYPE IF EXISTS
+  UserType,
+  StatusType;

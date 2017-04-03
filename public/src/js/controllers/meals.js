@@ -108,16 +108,31 @@ export default ['$scope', '$http', ($scope, $http) => {
     })
   }
 
+  $scope.activeSteps = []
+  $scope.viewMeal = meal => {
+    $.getJSON('/meal/steps/' + meal, data => {
+      $scope.activeSteps = data
+      $scope.$apply()
+
+      $('#viewMeal').modal('show')
+    })
+  }
+
   $scope.$watch('page', page => {
     if (($scope.mealPages.length - 1) < page) {
       $http.get('/meal/all.json?page=' + page)
-        .then(res => $scope.mealPages.push(res.data.results.map(i => {
-          i.threshold = parseFloat(i.threshold)
-          i.amountnew = parseFloat(i.amountnew)
-
-          return i
-        })))
+        .then(res => $scope.mealPages.push(res.data.results))
         .catch(err => console.error(err))
     }
   })
+
+  $scope.servings = 0
+  $scope.placeOrder = () => {
+    $.getJSON('/meal/order/' + $scope.activeMeal.name + '/' + $scope.servings, () => {
+      $('#orderMeal').modal('hide')
+    }).fail(err => {
+      $scope.editError = err.responseText
+      $scope.$apply()
+    })
+  }
 }]

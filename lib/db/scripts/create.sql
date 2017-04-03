@@ -31,10 +31,10 @@ CREATE TABLE Item(
   photo TEXT,
   etag TEXT, -- this is for photo caching reasons
   category TEXT NOT NULL,
-  available NUMERIC(2) NOT NULL CHECK (available >= 0),
-  threshold NUMERIC(2) NOT NULL CHECK (threshold >= 0),
-  amountNew NUMERIC(2) NOT NULL CHECK (amountNew >= threshold),
-  price NUMERIC(2) NOT NULL CHECK (price >= 0),
+  available NUMERIC(10, 2) NOT NULL CHECK (available >= 0),
+  threshold NUMERIC(10, 2) NOT NULL CHECK (threshold >= 0),
+  amountNew NUMERIC(10, 2) NOT NULL CHECK (amountNew >= threshold),
+  price NUMERIC(10, 2) NOT NULL CHECK (price >= 0),
 
   PRIMARY KEY (name),
   FOREIGN KEY (owner) REFERENCES AppUser
@@ -42,7 +42,7 @@ CREATE TABLE Item(
 
 CREATE TABLE ItemOrder(
   item TEXT NOT NULL,
-  amount NUMERIC(2) NOT NULL CHECK (amount > 0),
+  amount NUMERIC(10, 2) NOT NULL CHECK (amount > 0),
   owner INTEGER UNIQUE NOT NULL,
 
   FOREIGN KEY (item) REFERENCES Item,
@@ -68,73 +68,128 @@ ON Item
 EXECUTE PROCEDURE afterItemUpdate();
 -- END TRIGGER
 
-CREATE TABLE Recipe(
-  id SERIAL,
-  name TEXT NOT NULL,
+CREATE TABLE Meal(
+  name TEXT UNIQUE NOT NULL,
   photo TEXT,
   etag TEXT, -- this is for photo caching reasons
   description TEXT,
   category TEXT NOT NULL,
 
-  PRIMARY KEY (id)
+  PRIMARY KEY (name)
 );
 
 -- START FUNCTION
 -- Verify "UNIQUE" constraint on combination
--- of recipe and item to make a recipe requirement
-CREATE FUNCTION uniqRecipeRequirement(recipe INTEGER, item TEXT)
+-- of Meal and item to make a Meal requirement
+CREATE FUNCTION uniqMealRequirement(givenMeal TEXT, givenItem TEXT)
   RETURNS BOOLEAN AS $$
 DECLARE
   rows INTEGER;
 BEGIN
   SELECT
     COUNT(*) INTO rows
-  FROM RecipeRequirement
+  FROM MealRequirement
   WHERE
-    recipe = recipe
+    MealRequirement.meal = givenMeal
       AND
-    item = item;
+    MealRequirement.item = givenItem;
   
-  RETURN rows = 1;
+  RETURN rows = 0;
 END;
 $$ LANGUAGE 'plpgsql';
 -- END FUNCTION
 
-CREATE TABLE RecipeRequirement(
-  recipe INTEGER,
+CREATE TABLE MealRequirement(
+  meal TEXT,
   item TEXT,
+  quantity NUMERIC(10,2) NOT NULL CHECK (quantity > 0),
 
-  PRIMARY KEY (recipe, item),
-  FOREIGN KEY (recipe) REFERENCES Recipe,
+  PRIMARY KEY (meal, item),
+  FOREIGN KEY (meal) REFERENCES Meal,
   FOREIGN KEY (item) REFERENCES Item,
 
-  CHECK (uniqRecipeRequirement(recipe, item))
+  CHECK (uniqMealRequirement(meal, item))
 );
 
-CREATE TABLE RecipeStep(
-  recipe INTEGER,
-  duration NUMERIC(1) NOT NULL CHECK (duration > 0),
+CREATE TABLE MealStep(
+  meal TEXT,
+  duration NUMERIC(10, 1) NOT NULL CHECK (duration > 0),
   step TEXT NOT NULL,
 
-  FOREIGN KEY (recipe) REFERENCES Recipe
+  FOREIGN KEY (meal) REFERENCES Meal
 );
 
+CREATE VIEW MealSummary AS
+SELECT
+  name,
+  description,
+  category,
+  (
+    SELECT
+      SUM(duration)
+    FROM MealStep
+    WHERE
+      MealStep.meal = name
+  ) AS duration,
+  (
+    SELECT
+      COUNT(*)
+    FROM MealStep
+    WHERE
+      MealStep.meal = name
+  ) AS steps
+FROM Meal;
+
 -- START TRIGGER
--- "ON DELETE CASCADE" to delete all recipe
--- steps associated with a recipe
-CREATE FUNCTION afterRecipeDelete()
+-- "ON DELETE CASCADE" to delete all Meal
+-- steps associated with a Meal
+CREATE FUNCTION afterMealDelete()
   RETURNS trigger AS $$
 DECLARE
   nSteps INTEGER;
 BEGIN
-  DELETE FROM RecipeStep WHERE recipe = OLD.id;
+  DELETE FROM MealStep WHERE Meal = OLD.name;
   RETURN NEW;
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE TRIGGER afterRecipeDeleteTrigger
+CREATE TRIGGER afterMealDeleteTrigger
   AFTER DELETE
-ON Recipe
+ON Meal
   FOR EACH ROW
-EXECUTE PROCEDURE afterRecipeDelete();
+EXECUTE PROCEDURE afterMealDelete();
 -- END TRIGGER
+
+CREATE TYPE StatusType AS ENUM(
+  'Pending',
+  'Rejected',
+  'Approved',
+  'Fulfilled'
+);
+
+CREATE TABLE MealOrder(
+  owner INTEGER,
+  meal TEXT,
+  status StatusType DEFAULT 'Pending',
+  servings INTEGER NOT NULL CHECK (servings > 0),
+ 
+  PRIMARY KEY (owner, meal),
+  FOREIGN KEY (owner) REFERENCES AppUser,
+  FOREIGN KEY (meal) REFERENCES Meal
+);
+
+CREATE VIEW MealOrderSummary AS
+SELECT
+  (
+    SELECT
+      name
+    FROM AppUser
+    WHERE
+      AppUser.uid = MealOrder.owner
+  ) AS owner,
+  meal,
+  status,
+  servings,
+  MealSummary.*
+FROM MealOrder
+INNER JOIN MealSummary ON MealSummary.name = MealOrder.meal;
